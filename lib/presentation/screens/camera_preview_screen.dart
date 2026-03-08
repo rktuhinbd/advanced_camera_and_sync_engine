@@ -53,9 +53,26 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
             return const Center(child: CircularProgressIndicator());
           } else if (state is CameraError) {
             return Center(
-              child: Text(
-                state.message,
-                style: const TextStyle(color: Colors.white),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.redAccent, size: 64),
+                    const SizedBox(height: 16),
+                    Text(
+                      state.message,
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+                      onPressed: () => context.read<CameraBloc>().add(InitializeCamera()),
+                      child: const Text('Retry', style: TextStyle(color: Colors.black)),
+                    )
+                  ],
+                ),
               ),
             );
           } else if (state is CameraReady || state is CameraCapturing) {

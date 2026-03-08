@@ -5,6 +5,9 @@ import '../../../../domain/usecases/save_image_usecase.dart';
 import 'camera_event.dart';
 import 'camera_state.dart';
 
+/// CameraBloc handles the state and events for the custom camera implementation.
+/// It interacts directly with the `camera` plugin and forwards hardware captures
+/// to the internal database via the [SaveImageUseCase].
 class CameraBloc extends Bloc<CameraEvent, CameraState> {
   final SaveImageUseCase _saveImageUseCase;
   CameraController? _controller;
@@ -24,10 +27,11 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
     try {
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
-        emit(const CameraError("No cameras available."));
+        emit(const CameraError("Camera Hardware Unavailable: No cameras found on this device."));
         return;
       }
 
+      // Automatically selects the first available camera (usually rear)
       _controller = CameraController(
         cameras.first,
         ResolutionPreset.high,
@@ -47,8 +51,14 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
           maxZoom: maxZoom,
         ),
       );
+    } on CameraException catch (e) {
+      if (e.code == 'CameraAccessDenied') {
+         emit(const CameraError("Permission Denied: Please grant camera access in your device settings."));
+      } else {
+         emit(CameraError("Camera Initialization Failed: ${e.description}"));
+      }
     } catch (e) {
-      emit(CameraError(e.toString()));
+      emit(CameraError("An unexpected error occurred: ${e.toString()}"));
     }
   }
 

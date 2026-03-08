@@ -2,6 +2,7 @@ import 'package:hive/hive.dart';
 
 part 'captured_image.g.dart';
 
+/// Hive Entity representing a single captured image and its sync state.
 @HiveType(typeId: 0)
 class CapturedImage extends HiveObject {
   @HiveField(0)
