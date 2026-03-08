@@ -7,6 +7,7 @@ import 'data/repository_impl/sync_repository_impl.dart';
 import 'domain/repositories/sync_repository.dart';
 import 'domain/usecases/get_pending_uploads_usecase.dart';
 import 'domain/usecases/save_image_usecase.dart';
+import 'domain/usecases/delete_image_usecase.dart';
 import 'presentation/bloc/camera/camera_bloc.dart';
 import 'presentation/bloc/sync/sync_bloc.dart';
 import 'presentation/bloc/sync/sync_event.dart';
@@ -26,12 +27,14 @@ void main() async {
 
   final getPendingUploadsUseCase = GetPendingUploadsUseCase(syncRepository);
   final saveImageUseCase = SaveImageUseCase(syncRepository);
+  final deleteImageUseCase = DeleteImageUseCase(syncRepository);
 
   runApp(
     MyApp(
       syncRepository: syncRepository,
       getPendingUploadsUseCase: getPendingUploadsUseCase,
       saveImageUseCase: saveImageUseCase,
+      deleteImageUseCase: deleteImageUseCase,
     ),
   );
 }
@@ -40,12 +43,14 @@ class MyApp extends StatelessWidget {
   final SyncRepository syncRepository;
   final GetPendingUploadsUseCase getPendingUploadsUseCase;
   final SaveImageUseCase saveImageUseCase;
+  final DeleteImageUseCase deleteImageUseCase;
 
   const MyApp({
     super.key,
     required this.syncRepository,
     required this.getPendingUploadsUseCase,
     required this.saveImageUseCase,
+    required this.deleteImageUseCase,
   });
 
   @override
@@ -54,7 +59,7 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider<SyncBloc>(
           create: (context) =>
-              SyncBloc(syncRepository, getPendingUploadsUseCase)
+              SyncBloc(syncRepository, getPendingUploadsUseCase, deleteImageUseCase)
                 ..add(SyncLoadPending()),
         ),
         BlocProvider<CameraBloc>(
@@ -63,6 +68,7 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'Advanced Camera Sync',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           brightness: Brightness.dark,
           primarySwatch: Colors.blue,

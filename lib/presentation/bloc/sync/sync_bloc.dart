@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../domain/repositories/sync_repository.dart';
 import '../../../../domain/usecases/get_pending_uploads_usecase.dart';
+import '../../../../domain/usecases/delete_image_usecase.dart';
 import '../../../../core/utils/workmanager_setup.dart';
 import 'sync_event.dart';
 import 'sync_state.dart';
@@ -9,18 +10,32 @@ import 'sync_state.dart';
 class SyncBloc extends Bloc<SyncEvent, SyncState> {
   final SyncRepository _syncRepository;
   final GetPendingUploadsUseCase _getPendingUploadsUseCase;
+  final DeleteImageUseCase _deleteImageUseCase;
   StreamSubscription<dynamic>? _boxSubscription;
 
-  SyncBloc(this._syncRepository, this._getPendingUploadsUseCase)
-    : super(SyncInitial()) {
+  SyncBloc(
+    this._syncRepository, 
+    this._getPendingUploadsUseCase,
+    this._deleteImageUseCase,
+  ) : super(SyncInitial()) {
     on<SyncLoadPending>(_onLoadPending);
     on<SyncTriggerUpload>(_onTriggerUpload);
     on<SyncImagesUpdated>(_onImagesUpdated);
+    on<RemoveCapturedImage>(_onRemoveCapturedImage);
 
     // Watch for Hive changes
     _boxSubscription = _syncRepository.watchPendingUploads().listen((_) {
       add(SyncImagesUpdated());
     });
+  }
+
+  Future<void> _onRemoveCapturedImage(RemoveCapturedImage event, Emitter<SyncState> emit) async {
+    try {
+      await _deleteImageUseCase(event.imageId);
+      // The boxSubscription will catch the change and trigger SyncImagesUpdated automatically
+    } catch (e) {
+      emit(SyncError(e.toString()));
+    }
   }
 
   void _onLoadPending(SyncLoadPending event, Emitter<SyncState> emit) {

@@ -23,11 +23,15 @@ class ZoomControls extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildZoomButton(context, 0.5),
+            if (minZoom < 1.0) ...[
+              _buildZoomButton(context, minZoom, '0.5x'),
+              const SizedBox(width: 10),
+            ],
+            _buildZoomButton(context, 1.0, '1x'),
             const SizedBox(width: 10),
-            _buildZoomButton(context, 1.0),
-            const SizedBox(width: 10),
-            _buildZoomButton(context, 2.0),
+            if (maxZoom >= 2.0) ...[
+              _buildZoomButton(context, 2.0, '2x'),
+            ],
           ],
         ),
         Slider(
@@ -44,24 +48,24 @@ class ZoomControls extends StatelessWidget {
     );
   }
 
-  Widget _buildZoomButton(BuildContext context, double targetZoom) {
-    // If target zoom is outside the bounds, we clamp it to max/min
-    final clampTargetZoom = targetZoom.clamp(minZoom, maxZoom);
-    final isSelected = (currentZoom - clampTargetZoom).abs() < 0.1;
+  Widget _buildZoomButton(BuildContext context, double targetZoom, String label) {
+    final isSelected = (currentZoom - targetZoom).abs() < 0.1;
 
     return GestureDetector(
       onTap: () {
-        context.read<CameraBloc>().add(SetZoom(clampTargetZoom));
+        context.read<CameraBloc>().add(SetZoom(targetZoom.clamp(minZoom, maxZoom)));
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? Colors.yellow : Colors.black54,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? Colors.yellow : Colors.white),
+          border: Border.all(
+            color: isSelected ? Colors.yellow : Colors.white,
+          ),
         ),
         child: Text(
-          '${targetZoom}x',
+          label,
           style: TextStyle(
             color: isSelected ? Colors.black : Colors.white,
             fontWeight: FontWeight.bold,
